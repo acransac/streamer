@@ -59,8 +59,12 @@ function commit(stream, contract) {
   }
 }
 
+function forget(stream) {
+  return makeStream([value(now(stream)), null], afterwards(stream), source(stream));
+}
+
 function IO(procedure, ioChannel) {
   return (stream) => procedure(ioChannel)(stream);
 }
 
-module.exports = { Source, now, later, value, continuation, floatOn, commit, IO };
+module.exports = { Source, now, later, value, continuation, floatOn, commit, forget, IO };
