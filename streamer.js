@@ -1,3 +1,5 @@
+const EventEmitter = require('events');
+
 function Source(emitter, emissionCallbackName) {
   this.emitter = emitter;
 
@@ -67,4 +69,20 @@ function IO(procedure, ioChannel) {
   return (stream) => procedure(ioChannel)(stream);
 }
 
-module.exports = { Source, now, later, value, continuation, floatOn, commit, forget, IO };
+class MergedEventEmitters extends EventEmitter {
+  constructor(emitters) {
+    super();
+
+    emitters.forEach(emitter => emitter[0].on(emitter[1], (event) => this.emit('event', event)));
+
+    this.onevent = (event) => {};
+
+    this.on('event', (event) => this.onevent(event));
+  }
+};
+
+function mergeEvents(emitters) {
+  return new MergedEventEmitters(emitters);
+}
+
+module.exports = { Source, mergeEvents, now, later, value, continuation, floatOn, commit, forget, IO };
