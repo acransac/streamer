@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
 const Readline = require('readline');
-const { Source, now, later } = require('./streamer.js');
+const { Source, now, later, value } = require('./streamer.js');
 
 class dummyEventEmitter extends EventEmitter {
   constructor() {
@@ -25,8 +25,10 @@ function initialize() {
 }
 
 async function test(stream) {
-  if (now(stream) === 'a') {
-    return console.log('GOOD');
+  if (value(now(stream)) === 'a') {
+    console.log('GOOD');
+
+    return test(await later(stream));
   }
 
   return test(await later(stream));

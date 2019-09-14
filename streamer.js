@@ -4,6 +4,8 @@ function Source(emitter, emissionCallbackName) {
   this.emitter = emitter;
 
   this.emissionCallbackName = emissionCallbackName;
+
+  this.events = [];
 }
 
 Source.from = function (eventEmitter, emissionCallbackName) {
@@ -11,9 +13,21 @@ Source.from = function (eventEmitter, emissionCallbackName) {
 };
 
 Source.prototype.withDownstream = function (continuation) {
-  this.emitter[this.emissionCallbackName] = (value) => continuation(makeStream([value, null], new Promise((resolve) => {
-    this.emitter[this.emissionCallbackName] = (value) => resolve(value);
-  }), this));
+  const handleNextEvent = () => {
+    this.events = [...this.events, new Promise(resolve => {
+      this.emitter[this.emissionCallbackName] = value => {
+        handleNextEvent();
+
+        resolve(value);
+      };
+    })];
+  };
+
+  this.emitter[this.emissionCallbackName] = value => {
+    handleNextEvent();
+
+    return continuation(makeStream([value, null], this.events.shift(), this));
+  };
 
   return this;
 };
@@ -43,9 +57,7 @@ function continuation(now) {
 }
 
 async function later(stream) {
-  return makeStream([await afterwards(stream), continuation(now(stream))], new Promise((resolve) => {
-    source(stream).emitter[source(stream).emissionCallbackName] = (value) => resolve(value);
-  }), source(stream));
+  return makeStream([await afterwards(stream), continuation(now(stream))], source(stream).events.shift(), source(stream));
 }
 
 function floatOn(stream, jsValue) {
