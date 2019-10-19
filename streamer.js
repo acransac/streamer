@@ -8,11 +8,11 @@ function Source(emitter, emissionCallbackName) {
   this.events = [];
 }
 
-Source.from = function (eventEmitter, emissionCallbackName) {
-  return new Source(eventEmitter, emissionCallbackName);
+Source.from = function (emitter, emissionCallbackName) {
+  return new Source(emitter, emissionCallbackName);
 };
 
-Source.prototype.withDownstream = function (continuation) {
+Source.prototype.withDownstream = function (downstream) {
   const handleNextEvent = () => {
     this.events = [...this.events, new Promise(resolve => {
       this.emitter[this.emissionCallbackName] = value => {
@@ -26,7 +26,7 @@ Source.prototype.withDownstream = function (continuation) {
   this.emitter[this.emissionCallbackName] = value => {
     handleNextEvent();
 
-    return continuation(makeStream([value, null], this.events.shift(), this));
+    return downstream(makeStream([value, null], this.events.shift(), this));
   };
 
   return this;
@@ -69,7 +69,9 @@ function commit(stream, contract) {
     return makeStream([value(now(stream)), contract], afterwards(stream), source(stream));
   }
   else {
-    return makeStream([value(now(stream)), async (futureStream) => contract(await continuation(now(stream))(futureStream))], afterwards(stream), source(stream));
+    return makeStream([value(now(stream)), async (futureStream) => contract(await continuation(now(stream))(futureStream))],
+	              afterwards(stream),
+	              source(stream));
   }
 }
 
@@ -78,18 +80,18 @@ function forget(stream) {
 }
 
 function IO(procedure, ioChannel) {
-  return (stream) => procedure(ioChannel)(stream);
+  return stream => procedure(ioChannel)(stream);
 }
 
 class MergedEventEmitters extends EventEmitter {
   constructor(emitters) {
     super();
 
-    emitters.forEach(emitter => emitter[0].on(emitter[1], (event) => this.emit('event', event)));
+    emitters.forEach(emitter => emitter[0].on(emitter[1], event => this.emit('event', event)));
 
-    this.onevent = (event) => {};
+    this.onevent = event => {};
 
-    this.on('event', (event) => this.onevent(event));
+    this.on('event', event => this.onevent(event));
   }
 };
 
