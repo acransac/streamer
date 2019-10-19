@@ -1,35 +1,43 @@
 const EventEmitter = require('events');
-const Readline = require('readline');
 const { Source, now, later, value } = require('./streamer.js');
 
-class dummyEventEmitter extends EventEmitter {
-  constructor() {
+class SequenceEmitter extends EventEmitter {
+  constructor(sequence, delay) {
     super();
 
     this.onevent = undefined;
 
-    this.on('event', (event) => this.onevent(event));
+    this.on('event', event => this.onevent(event));
+
+    const emitSequence = sequence => {
+      if (sequence.length === 0) {
+        return;   
+      }
+      else {
+        setTimeout(() => {
+          this.emit('event', sequence[0]);
+
+	  emitSequence(sequence.slice(1));
+        }, delay ? delay : 200);
+      }
+    };
+
+    emitSequence(sequence);
   }
 };
+
+function emitSequence(sequence, delay) {
+  return new SequenceEmitter(sequence, delay);
+}
 
 initialize();
 
 function initialize() {
-  const repl = Readline.createInterface({ input: process.stdin });
-
-  const events = new dummyEventEmitter();
-
-  repl.on('line', (line) => events.emit('event', line));
-
-  Source.from(events, "onevent").withDownstream(test);
+  Source.from(emitSequence(["a", "b"]), "onevent").withDownstream(test);
 }
 
 async function test(stream) {
-  if (value(now(stream)) === 'a') {
-    console.log('GOOD');
-
-    return test(await later(stream));
-  }
+  console.log(value(now(stream)));
 
   return test(await later(stream));
 }
