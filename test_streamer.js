@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const { Source, now, later, value } = require('./streamer.js');
+const { Source, now, later, value, floatOn } = require('./streamer.js');
 const Test = require('tester');
 
 class SequenceEmitter extends EventEmitter {
@@ -46,6 +46,15 @@ function test_eventsStream(finish, check) {
   });
 }
 
+function test_floatOn(finish, check) {
+  const floatValue = async (stream) => floatOn(stream, "b");
+
+  Source.from(emitSequence(["a"]), "onevent").withDownstream(async (stream) => {
+    return finish(check(value(now(await floatValue(stream))) === "b"));
+  });
+}
+
 Test.run([
   Test.makeTest(test_eventsStream, "Events Stream"),
+  Test.makeTest(test_floatOn, "Float Value"),
 ]);
