@@ -1,5 +1,6 @@
 const EventEmitter = require('events');
 const { Source, now, later, value } = require('./streamer.js');
+const Test = require('tester');
 
 class SequenceEmitter extends EventEmitter {
   constructor(sequence, delay) {
@@ -30,14 +31,21 @@ function emitSequence(sequence, delay) {
   return new SequenceEmitter(sequence, delay);
 }
 
-initialize();
+function test_eventsStream(finish, check) {
+  const simpleFlow = async (stream) => {
+    if (value(now(stream)) === "end") {
+      return [];
+    }
+    else {
+      return [value(now(stream))].concat(await simpleFlow(await later(stream)));
+    }
+  }
 
-function initialize() {
-  Source.from(emitSequence(["a", "b"]), "onevent").withDownstream(test);
+  Source.from(emitSequence(["a", "b", "c", "end"]), "onevent").withDownstream(async (stream) => {
+    return finish(check(Test.sameSequences(await simpleFlow(stream), ["a", "b", "c"])));
+  });
 }
 
-async function test(stream) {
-  console.log(value(now(stream)));
-
-  return test(await later(stream));
-}
+Test.run([
+  Test.makeTest(test_eventsStream, "Events Stream"),
+]);
