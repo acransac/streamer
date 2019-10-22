@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const { Source, now, later, value, floatOn } = require('./streamer.js');
+const { Source, now, later, value, floatOn, commit, continuation, forget } = require('./streamer.js');
 const Test = require('tester');
 
 class SequenceEmitter extends EventEmitter {
@@ -54,7 +54,38 @@ function test_floatOn(finish, check) {
   });
 }
 
+function test_continuation(finish, check) {
+  const again = async (stream) => {
+    if (value(now(stream)) === "end") {
+      return finish();
+    }
+    else {
+      return again(await continuation(now(stream))(forget(await later(stream))));
+    }
+  };
+
+  const interleave = separator => {
+    const joiner = joined => async (stream) => {
+      if (value(now(stream)) === "end") {
+	check(joined === `a${separator}b${separator}c${separator}`);
+
+        return stream;
+      }
+      else {
+        return commit(stream, joiner(`${joined}${value(now(stream))}${separator}`));
+      }
+    };
+
+    return joiner("");
+  };
+
+  Source.from(emitSequence(["a", "b", "c", "end"]), "onevent").withDownstream(async (stream) => {
+    return again(await interleave("O")(await interleave("T")(stream)));
+  });
+}
+
 Test.run([
   Test.makeTest(test_eventsStream, "Events Stream"),
   Test.makeTest(test_floatOn, "Float Value"),
+  Test.makeTest(test_continuation, "Continuation"),
 ]);
