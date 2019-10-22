@@ -83,7 +83,7 @@ class MergedEventEmitters extends EventEmitter {
   constructor(emitters) {
     super();
 
-    emitters.forEach(emitter => emitter[0].on(emitter[1], event => this.emit('event', event)));
+    emitters.forEach(emitter => eventEmitter(emitter).on(eventName(emitter), event => this.emit('event', event)));
 
     this.onevent = event => {};
 
@@ -95,4 +95,16 @@ function mergeEvents(emitters) {
   return new MergedEventEmitters(emitters);
 }
 
-module.exports = { Source, mergeEvents, now, later, value, continuation, floatOn, commit, forget };
+function makeEmitter(eventEmitter, eventName) {
+  return [eventEmitter, eventName];
+}
+
+function eventEmitter(emitter) {
+  return emitter[0];
+}
+
+function eventName(emitter) {
+  return emitter[1];
+}
+
+module.exports = { Source, makeEmitter, mergeEvents, now, later, value, continuation, floatOn, commit, forget };
