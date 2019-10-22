@@ -1,12 +1,12 @@
 const EventEmitter = require('events');
-const { Source, now, later, value, floatOn, commit, continuation, forget } = require('./streamer.js');
+const { Source, makeEmitter, mergeEvents, now, later, value, floatOn, commit, continuation, forget } = require('./streamer.js');
 const Test = require('tester');
 
 class SequenceEmitter extends EventEmitter {
   constructor(sequence, delay) {
     super();
 
-    this.onevent = undefined;
+    this.onevent = () => {};
 
     this.on('event', event => this.onevent(event));
 
@@ -84,8 +84,26 @@ function test_continuation(finish, check) {
   });
 }
 
+function test_mergeEvents(finish, check) {
+  const simpleFlow = async (stream) => {
+    if (value(now(stream)) === "end") {
+      return [];
+    }
+    else {
+      return [value(now(stream))].concat(await simpleFlow(await later(stream)));
+    }
+  }
+
+  Source.from(mergeEvents([makeEmitter(emitSequence(["a", "b", "c", "end"], 200), "event"),
+                           makeEmitter(emitSequence(["x", "y", "z", "end"], 210), "event")]), "onevent")
+        .withDownstream(async (stream) => {
+    return finish(check(Test.sameSequences(await simpleFlow(stream), ["a", "x", "b", "y", "c", "z"])));
+  });
+}
+
 Test.run([
   Test.makeTest(test_eventsStream, "Events Stream"),
   Test.makeTest(test_floatOn, "Float Value"),
   Test.makeTest(test_continuation, "Continuation"),
+  Test.makeTest(test_mergeEvents, "Merge Events"),
 ]);
