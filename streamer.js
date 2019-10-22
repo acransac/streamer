@@ -79,10 +79,6 @@ function forget(stream) {
   return makeStream([value(now(stream)), null], afterwards(stream), source(stream));
 }
 
-function IO(procedure, ioChannel) {
-  return stream => procedure(ioChannel)(stream);
-}
-
 class MergedEventEmitters extends EventEmitter {
   constructor(emitters) {
     super();
@@ -99,4 +95,4 @@ function mergeEvents(emitters) {
   return new MergedEventEmitters(emitters);
 }
 
-module.exports = { Source, mergeEvents, now, later, value, continuation, floatOn, commit, forget, IO };
+module.exports = { Source, mergeEvents, now, later, value, continuation, floatOn, commit, forget };
