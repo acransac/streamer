@@ -1,35 +1,6 @@
-const EventEmitter = require('events');
 const { Source, makeEmitter, mergeEvents, now, later, value, floatOn, commit, continuation, forget } = require('./streamer.js');
 const Test = require('tester');
-
-class SequenceEmitter extends EventEmitter {
-  constructor(sequence, delay) {
-    super();
-
-    this.onevent = () => {};
-
-    this.on('event', event => this.onevent(event));
-
-    const emitSequence = sequence => {
-      if (sequence.length === 0) {
-        return;   
-      }
-      else {
-        setTimeout(() => {
-          this.emit('event', sequence[0]);
-
-	  emitSequence(sequence.slice(1));
-        }, delay ? delay : 200);
-      }
-    };
-
-    emitSequence(sequence);
-  }
-};
-
-function emitSequence(sequence, delay) {
-  return new SequenceEmitter(sequence, delay);
-}
+const StreamerTest = require('./testutils.js');
 
 function test_eventsStream(finish, check) {
   const simpleFlow = async (stream) => {
@@ -41,7 +12,7 @@ function test_eventsStream(finish, check) {
     }
   }
 
-  Source.from(emitSequence(["a", "b", "c", "end"]), "onevent").withDownstream(async (stream) => {
+  Source.from(StreamerTest.emitSequence(["a", "b", "c", "end"]), "onevent").withDownstream(async (stream) => {
     return finish(check(Test.sameSequences(await simpleFlow(stream), ["a", "b", "c"])));
   });
 }
@@ -49,7 +20,7 @@ function test_eventsStream(finish, check) {
 function test_floatOn(finish, check) {
   const floatValue = async (stream) => floatOn(stream, "b");
 
-  Source.from(emitSequence(["a"]), "onevent").withDownstream(async (stream) => {
+  Source.from(StreamerTest.emitSequence(["a"]), "onevent").withDownstream(async (stream) => {
     return finish(check(value(now(await floatValue(stream))) === "b"));
   });
 }
@@ -79,7 +50,7 @@ function test_continuation(finish, check) {
     return joiner("");
   };
 
-  Source.from(emitSequence(["a", "b", "c", "end"]), "onevent").withDownstream(async (stream) => {
+  Source.from(StreamerTest.emitSequence(["a", "b", "c", "end"]), "onevent").withDownstream(async (stream) => {
     return again(await interleave("O")(await interleave("T")(stream)));
   });
 }
@@ -94,8 +65,8 @@ function test_mergeEvents(finish, check) {
     }
   }
 
-  Source.from(mergeEvents([makeEmitter(emitSequence(["a", "b", "c", "end"], 200), "event"),
-                           makeEmitter(emitSequence(["x", "y", "z", "end"], 210), "event")]), "onevent")
+  Source.from(mergeEvents([makeEmitter(StreamerTest.emitSequence(["a", "b", "c", "end"], 200), "event"),
+                           makeEmitter(StreamerTest.emitSequence(["x", "y", "z", "end"], 210), "event")]), "onevent")
         .withDownstream(async (stream) => {
     return finish(check(Test.sameSequences(await simpleFlow(stream), ["a", "x", "b", "y", "c", "z"])));
   });
