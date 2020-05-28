@@ -1,8 +1,6 @@
 Introduction
 ------------
-**streamer** provides an easy-to-reason-about model to process a stream of events with Node.js. There is a _Source_ of events to which is attached a composition of processes, the _Downstream_, which sees all events emitted by the source. These processes receive and output the _stream_. The latter models the sequence of events as follows:
-
-[Graph of the now and afterwards events]
+**streamer** provides an easy-to-reason-about model to process a stream of events with Node.js. There is a _Source_ of events to which is attached a composition of processes, the _Downstream_, which sees all events emitted by the source. These processes receive and output the _stream_. The latter is defined recursively as the pair of a current event with a later stream.
 
 As a result, processes can be defined by recurring on the sequence of events, retrieving the available event from the stream and awaiting on the ones coming afterwards.
 
@@ -19,7 +17,7 @@ and import the needed functionalities:
 ## Make A Source;
 A _Source_ is built up with `Source.from` chained with `Source.withDownstream`:
 * `Source.from` takes an `ÈventEmitter` and the name of the callback of the event to listen to, as used in the statement `eventEmitter.on('someEvent', callbackName)`.
-* `Source.withDownstream` takes an asynchronous function whose input and output are _streams_.
+* `Source.withDownstream` takes a process, that is an asynchronous function whose input and output are _streams_.
 
 Here is an example:
     const EventEmitter = require('events');
@@ -73,7 +71,89 @@ Example:
 event emitted and processed`
 
 ## Make A Process
+A process is an asynchronous function that receives and outputs a _stream_. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited on with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style.
+
+Example:
+   const { later, now, Source, StreamerTest, value } = require('streamer');
+
+   const processA = async (stream) => {
+     if (value(now(stream)) > 3) {
+       return stream;
+     }
+     else {
+       console.log(value(now(stream)));
+
+       return processA(await later(stream));
+     }
+   };
+
+   const processB = async (stream) => {
+     console.log("stream processed");
+
+     return stream;
+   };
+
+   Source.from(StreamerTest.emitSequence([1, 2, 3, 4]), "onevent")
+         .withDownstream(async (stream) => processB(await processA(stream)));
+
+`$node example.js
+1
+2
+3
+stream processed`
+
 ## Make A Composition Of Processes
+Complex processes are more easily defined by chaining smaller functions implementing a specific task each. One event has to pass through every step so it is not possible to await on the later stream in each of these. Instead, a function records to the stream what should be executed on the next event. The chain of future processes constitute the _continuation_.
+* `commit` is used to record the next iteration of a process. It takes the stream as first argument and the function to execute later as second. It returns a stream and should be called in the return statement.
+* `continuation` returns the future processing sequence from the current event passed as argument (`continuation(now(stream))`).
+* `forget` clears out the continuation from the argument _stream_ and returns the latter. Used together with `continuation` in a last step of the composed process, it allows to define loops (see example).
+
+Example:
+    const { commit, continuation, forget, later, now, Source, StreamerTest, value } = require('streamer');
+
+    const parseLetters = parsed => async (stream) => {
+      if (typeof value(now(stream)) === "string" && value(now(stream)) !== "end") {
+        console.log(parsed + value(now(stream)));
+
+        return commit(stream, parseLetters(parsed + value(now(stream))));
+      }
+      else {
+        return commit(stream, parseLetters(parsed));
+      }
+    };
+
+    const sumNumbers = sum => async (stream) => {
+      if (typeof value(now(stream)) === "number") {
+        console.log(sum + value(now(stream)));
+
+        return commit(stream, sumNumbers(sum + value(now(stream))));
+      }
+      else {
+        return commit(stream, sumNumbers(sum));
+      }
+    };
+
+    const loop = async (stream) => {
+      if (value(now(stream)) === "end") {
+        console.log("stream processed");
+
+        return stream;
+      }
+      else {
+        return loop(await continuation(now(stream))(forget(await later(stream))));
+      }
+    };
+
+    Source.from(StreamerTest.emitSequence(["a", 1, "b", 2, "end"]), "onevent")
+          .withDownstream(async (stream) => loop(await sumNumbers(0)(await parseLetters("")(stream))));
+
+`$node example.js
+a
+1
+ab
+3
+stream processed`
+
 ## Transform Events
 ## Reuse Patterns
 (Loop, Filter, Parser)
