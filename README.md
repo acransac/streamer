@@ -154,7 +154,8 @@ ab
 3
 stream processed`
 
+Note that a conditional loop structure in the middle of the chain of processes effectively filters out choosen events for the subsequent steps.
+
 ## Transform Events
-## Reuse Patterns
-(Loop, Filter, Parser)
-## Test Your Downstream
+## Test The Downstream
+As observed in the examples, **streamer** provides a test event emitter `StreamerTest.emitSequence` with the emission callback name being "onevent". It emits the sequence of values passed in the argument array.
