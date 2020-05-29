@@ -38,7 +38,7 @@ function test_continuation(finish, check) {
   const interleave = separator => {
     const joiner = joined => async (stream) => {
       if (value(now(stream)) === "end") {
-	check(joined === `a${separator}b${separator}c${separator}`);
+        check(joined === `a${separator}b${separator}c${separator}`);
 
         return stream;
       }

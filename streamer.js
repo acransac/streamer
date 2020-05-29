@@ -70,8 +70,8 @@ function commit(stream, contract) {
   }
   else {
     return makeStream([value(now(stream)), async (futureStream) => contract(await continuation(now(stream))(futureStream))],
-	              afterwards(stream),
-	              source(stream));
+                      afterwards(stream),
+                      source(stream));
   }
 }
 

@@ -10,13 +10,13 @@ class SequenceEmitter extends EventEmitter {
 
     const emitSequence = sequence => {
       if (sequence.length === 0) {
-        return;   
+        return;
       }
       else {
         setTimeout(() => {
           this.emit('event', sequence[0]);
 
-	  emitSequence(sequence.slice(1));
+          emitSequence(sequence.slice(1));
         }, delay ? delay : 200);
       }
     };
