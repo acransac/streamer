@@ -157,5 +157,50 @@ stream processed`
 Note that a conditional loop structure in the middle of the chain of processes effectively filters out choosen events for the subsequent steps.
 
 ## Transform Events
+One process can push a value downstream. It is done with 'floatOn' which takes the stream as first argument and the value to output as second. It returns a _stream_ and should be used in the return statement, possibly chained with `commit`.
+
+Example:
+    const { commit, continuation, floatOn, forget, later, now, Source, StreamerTest, value } = require('streamer');
+
+    const upperCase = async (stream) => {
+      if (value(now(stream)) !== "end") {
+        return commit(floatOn(stream, value(now(stream)).toUpperCase()), upperCase);
+      }
+      else {
+        return stream;
+      }
+    };
+
+    const parse = parsed => async (stream) => {
+      if (value(now(stream)) !== "end") {
+        console.log(parsed + value(now(stream)));
+
+        return commit(stream, parse(parsed + value(now(stream))));
+      }
+      else {
+        return stream;
+      }
+    };
+
+    const loop = async (stream) => {
+      if (value(now(stream)) === "end") {
+        console.log("stream processed");
+
+        return stream;
+      }
+      else {
+        return loop(await continuation(now(stream))(forget(await later(stream))));
+      }
+    };
+
+    Source.from(StreamerTest.emitSequence(["a", "b", "c", "end"]), "onevent")
+          .withDownstream(async (stream) => loop(await parse("")(await upperCase(stream))));
+
+`$node example.js
+A
+AB
+ABC
+stream processed`
+
 ## Test The Downstream
 As observed in the examples, **streamer** provides a test event emitter `StreamerTest.emitSequence` with the emission callback name being "onevent". It emits the sequence of values passed in the argument array.
