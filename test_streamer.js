@@ -1,4 +1,4 @@
-const { Source, makeEmitter, mergeEvents, now, later, value, floatOn, commit, continuation, forget } = require('./streamer.js');
+const { commit, continuation, floatOn, forget, later, makeEmitter, mergeEvents, now, Source, value } = require('./streamer.js');
 const Test = require('tester');
 const StreamerTest = require('./testutils.js');
 
