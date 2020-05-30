@@ -9,6 +9,7 @@
   "author": "Adrien Cransac",
   "license": "ISC",
   "dependencies": {
+    "jsdoc": "^3.6.4",
     "tester": "file:../tester"
   }
 }
