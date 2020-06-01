@@ -1,12 +1,12 @@
 const EventEmitter = require('events');
 
-/**
- * @typedef EventEmitter
- */
-
 // # Source
 /**
- * @typedef Source
+ * See {@link Source.from} for the preferred way to make a Source
+ * @constructor
+ * @param {EventEmitter} emitter
+ * @param {string} emissionCallbackName
+ * @return {Source}
  */
 function Source(emitter, emissionCallbackName) {
   this.emitter = emitter;
@@ -25,17 +25,6 @@ function Source(emitter, emissionCallbackName) {
 Source.from = function (emitter, emissionCallbackName) {
   return new Source(emitter, emissionCallbackName);
 };
-
-/*
- * @typedef Stream
- */
-
-/*
- * @async
- * @typedef {function} Process
- * @param {Stream} stream
- * @return {Stream}
- */
 
 /**
  * Attach a process to the Source
