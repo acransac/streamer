@@ -1,25 +1,38 @@
-Introduction
-------------
-**streamer** provides an easy-to-reason-about model to process a stream of events with Node.js. There is a _Source_ of events to which is attached a composition of processes, the _Downstream_, which sees all events emitted by the source. These processes receive and output the _stream_. The latter is defined recursively as the pair of a current event with a later stream.
+# Introduction
+**streamer** provides an easy-to-reason-about model to process a stream of events with Node.js. There is a _source_ of events to which is attached a composition of _processes_ which see all events emitted by the source. These processes receive and output the _stream_. The latter is defined recursively as the pair of a current event with a later stream.
 
-As a result, processes can be defined by recurring on the sequence of events, retrieving the available event from the stream and awaiting on the ones coming afterwards.
+As a result, processes can be defined by recurring on the sequence of events, retrieving the available event from the stream and awaiting the ones coming afterwards.
 
-To make processing easier, the downstream can be defined step by step with each process having the possibility to record a variation of itself to execute on the next event carried by the stream. Also, one process can transform the value defining the event and return it to the following steps.
+To make composition easier, each process can record a variation of itself to execute on the next event carried by the stream. Also, one process can transform the value defining the event and return it to the following steps.
 
-How To Use Streamer
--------------------
+# How To Use Streamer
 **streamer** is a small helper library. Add it to a project with:
+
     npm install acransac/streamer
 
 and import the needed functionalities:
+
+```javascript
     const { commit, continuation, floatOn, forget, later, makeEmitter, mergeEvents, now, Source, StreamerTest, value } = require('streamer');
+```
 
-## Make A Source;
-A _Source_ is built up with `Source.from` chained with `Source.withDownstream`:
-* `Source.from` takes an `ÈventEmitter` and the name of the callback of the event to listen to, as used in the statement `eventEmitter.on('someEvent', callbackName)`.
-* `Source.withDownstream` takes a process, that is an asynchronous function whose input and output are _streams_.
+## Make A Source
+A `Source` is built up with `Source.from` chained with `Source.withDownstream`:
+* _Source.from:: (EventEmitter, String) -> Source_
+  | Parameter            | Type         | Description          |
+  |----------------------|--------------|----------------------|
+  | eventEmitter         | EventEmitter | A Node event emitter |
+  | emissionCallbackName | String       | The name of the callback of the event to listen to, as used in the statement `eventEmitter.on('someEvent', callbackName)` |
 
-Here is an example:
+* _Source.withDownstream:: Process -> Source_
+  | Parameter  | Type    | Description |
+  |------------|---------|-------------|
+  | downstream | Process | The composition of processes to execute when an event is emitted |
+where _Process:: async Stream -> Stream_
+
+Example:
+
+```javascript
     const EventEmitter = require('events');
     const { Source } = require('streamer');
 
@@ -42,15 +55,29 @@ Here is an example:
     });
 
     emitter.emit('event');
+```
 
-`$node example.js
-event emitted and processed`
+    $node example.js
+    event emitted and processed
 
-**streamer** also provides the wrapper `mergeEvents` that can merge several event emitters into one whose emission callback is `onevent`.
-`mergeEvents` takes an array of emitters constructed with `makeEmitter`. The latter's arguments are the event emitter and the name of the event, as used in the statement `eventEmitter.on('eventName', someCallback)`.
-It is then possible to wrap an emitter that does not expose a callback into one that does with the combination of `mergeEvents` and `makeEmitter`.
+**streamer** also provides the wrapper `mergeEvents` that can merge several event emitters into one. These emitters have to be constructed with `makeEmitter`:
+* _mergeEvents:: [Emitter] -> EventEmitter_
+  | Parameter | Type      | Description                     |
+  |-----------|-----------|---------------------------------|
+  | emitters  | [Emitter] | The event emitters to listen to |
+The returned event emitter exposes an emission callback named "onevent" which is used as the second parameter to `Source.from`.
+
+* _makeEmitter:: (EventEmitter, String) -> Emitter_
+  | Parameter    | Type         | Description                       |
+  |--------------|--------------|-----------------------------------|
+  | eventEmitter | EventEmitter | The event emitter to listen to    |
+  | eventName    | String       | The name of the event listened to, as used in the statement `eventEmitter.on('eventName', someCallback)` |
+
+Note: it is then possible to wrap an emitter that does not expose a callback into one that does with the combination of `mergeEvents` and `makeEmitter`.
 
 Example:
+
+```javascript
     const EventEmitter = require('events');
     const { makeEmitter, mergeEvents, Source } = require('streamer');
 
@@ -66,9 +93,10 @@ Example:
     });
 
     emitter1.emit('someEvent'); // or emitter2.emit('anotherEvent');
+```
 
-`$node example.js
-event emitted and processed`
+    $node example.js
+    event emitted and processed`
 
 ## Make A Process
 A process is an asynchronous function that receives and outputs a _stream_. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited on with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style.
