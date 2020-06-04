@@ -29,6 +29,7 @@ class SequenceEmitter extends EventEmitter {
  * Make an event emitter with a predefined sequence of events
  * @param {*[]} sequence - The values to emit
  * @param {number} [delay=200] - The time interval in ms between two events
+ * @return {EventEmitter}
  */
 function emitSequence(sequence, delay) {
   return new SequenceEmitter(sequence, delay);

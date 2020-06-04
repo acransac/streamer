@@ -65,13 +65,9 @@ class MergedEventEmitters extends EventEmitter {
 };
 
 /**
- * @typedef Emitter
- */
-
-/**
  * Make an Emitter
- * @param {EventEmitter} - A Node.js event emitter
- * @param {string} - The name of the event to listen to
+ * @param {EventEmitter} eventEmitter - A Node.js event emitter
+ * @param {string} eventName - The name of the event to listen to
  * @return {Emitter}
  */
 function makeEmitter(eventEmitter, eventName) {
@@ -101,12 +97,8 @@ function makeStream(now, afterwards, source) {
 }
 
 /**
- * @typedef AvailableStream
- */
-
-/**
  * Retrieve the available stream
- * @param {Stream}
+ * @param {Stream} stream
  * @return {AvailableStream}
  */
 function now(stream) {
@@ -115,7 +107,7 @@ function now(stream) {
 
 /**
  * Retrieve the future stream
- * @param {Stream}
+ * @param {Stream} stream
  * @return {Promise<Stream>}
  */
 async function later(stream) {
@@ -151,8 +143,8 @@ function continuation(now) {
 // # Stream operations
 /**
  * Record a process to execute on the next event
- * @param {Stream}
- * @param {Process}
+ * @param {Stream} stream
+ * @param {Process} process
  * @return {Stream}
  */
 function commit(stream, process) {
@@ -168,8 +160,8 @@ function commit(stream, process) {
 
 /**
  * Attach a value to the available stream
- * @param {Stream}
- * @param {*}
+ * @param {Stream} stream
+ * @param {*} jsValue
  * @return {Stream}
  */
 function floatOn(stream, jsValue) {
@@ -178,7 +170,7 @@ function floatOn(stream, jsValue) {
 
 /**
  * Clears the process to execute on the next event
- * @param {Stream}
+ * @param {Stream} stream
  * @return {Stream}
  */
 function forget(stream) {
