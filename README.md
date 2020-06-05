@@ -21,8 +21,8 @@ A `Source` is built up with `Source.from` chained with `Source.withDownstream`:
 * `Source.from:: (EventEmitter, String) -> Source`
   | Parameter            | Type         | Description          |
   |----------------------|--------------|----------------------|
-  | eventEmitter         | EventEmitter | A Node event emitter |
-  | emissionCallbackName | String       | The name of the callback of the event to listen to, as used in the statement `eventEmitter.on('someEvent', callbackName)` |
+  | eventEmitter         | EventEmitter | A Node.js event emitter |
+  | emissionCallbackName | String       | The name of the callback of the event to listen to, as used in the statement `eventEmitter.on('someEvent', emissionCallbackName)` |
 
 * `Source.withDownstream:: Process -> Source`
   | Parameter  | Type    | Description |
@@ -65,7 +65,7 @@ Example:
 * `mergeEvents:: [Emitter] -> EventEmitter`
   | Parameter | Type      | Description                     |
   |-----------|-----------|---------------------------------|
-  | emitters  | [Emitter] | The event emitters to listen to |
+  | emitters  | [Emitter] | An array of event emitters to listen to |
 
   The returned event emitter exposes an emission callback named `"onevent"` which is used as the second parameter to `Source.from`.
 
