@@ -19,14 +19,14 @@ and import the needed functionalities:
 ## Make A Source
 A `Source` is built up with `Source.from` chained with `Source.withDownstream`:
 * `Source.from:: (EventEmitter, String) -> Source`
-  | Parameter            | Type         | Description          |
-  |----------------------|--------------|----------------------|
+  | Parameter            | Type         | Description             |
+  |----------------------|--------------|-------------------------|
   | eventEmitter         | EventEmitter | A Node.js event emitter |
   | emissionCallbackName | String       | The name of the callback of the event to listen to, as used in the statement `eventEmitter.on('someEvent', emissionCallbackName)` |
 
 * `Source.withDownstream:: Process -> Source`
-  | Parameter  | Type    | Description |
-  |------------|---------|-------------|
+  | Parameter  | Type    | Description                                                      |
+  |------------|---------|------------------------------------------------------------------|
   | downstream | Process | The composition of processes to execute when an event is emitted |
 
   where `Process:: async Stream -> Stream`
@@ -63,16 +63,16 @@ Example:
 
 **streamer** also provides the wrapper `mergeEvents` that can merge several event emitters into one. These emitters have to be constructed with `makeEmitter`:
 * `mergeEvents:: [Emitter] -> EventEmitter`
-  | Parameter | Type      | Description                     |
-  |-----------|-----------|---------------------------------|
+  | Parameter | Type      | Description                             |
+  |-----------|-----------|-----------------------------------------|
   | emitters  | [Emitter] | An array of event emitters to listen to |
 
   The returned event emitter exposes an emission callback named `"onevent"` which is used as the second parameter to `Source.from`.
 
 * `makeEmitter:: (EventEmitter, String) -> Emitter`
-  | Parameter    | Type         | Description                       |
-  |--------------|--------------|-----------------------------------|
-  | eventEmitter | EventEmitter | The event emitter to listen to    |
+  | Parameter    | Type         | Description             |
+  |--------------|--------------|-------------------------|
+  | eventEmitter | EventEmitter | A Node.js event emitter |
   | eventName    | String       | The name of the event listened to, as used in the statement `eventEmitter.on('eventName', someCallback)` |
 
 Note: it is then possible to wrap an emitter that does not expose a callback into one that does with the combination of `mergeEvents` and `makeEmitter`.
@@ -101,7 +101,7 @@ Example:
     event emitted and processed`
 
 ## Make A Process
-A process is an asynchronous function that receives and outputs a _stream_. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style:
+A process is an asynchronous function that receives and outputs a stream. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style:
 
 * `now:: Stream -> AvailableStream`
   | Parameter | Type   | Description |
@@ -153,7 +153,7 @@ Example:
 ## Make A Composition Of Processes
 Complex processes are more easily defined by chaining smaller functions implementing a specific task each. One event has to pass through every step so it is not possible to await the later stream in each of these. Instead, a function records to the stream what should be executed on the next event. The chain of future processes constitutes the _continuation_.
 
-`commit` is used to record the next iteration of a process and should be called in the return statement. `continuation` returns the future processing sequence from the available stream (`continuation(now(stream))`). `forget` clears out the continuation:
+`commit` is used to record the next iteration of a process and is called in the return statement. `continuation` returns the future processing sequence from the available stream (`continuation(now(stream))`). `forget` clears out the continuation:
 
 * `commit:: (Stream, Process) -> Stream`
   | Parameter | Type    | Description                              |
