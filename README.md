@@ -9,7 +9,7 @@ To make composition easier, each process can record a variation of itself to exe
 **streamer** is a small helper library. Add it to a project with:
 
 ```shell
-    npm install acransac/streamer
+    $ npm install acransac/streamer
 ```
 
 and import the needed functionalities:
@@ -61,7 +61,7 @@ Example:
 ```
 
 ```shell
-    $node example.js
+    $ node example.js
     event emitted and processed
 ```
 
@@ -102,7 +102,7 @@ Example:
 ```
 
 ```shell
-    $node example.js
+    $ node example.js
     event emitted and processed`
 ```
 
@@ -151,7 +151,7 @@ Example:
 ```
 
 ```shell
-    $node example.js
+    $ node example.js
     1
     2
     3
@@ -228,7 +228,7 @@ Example:
 ```
 
 ```shell
-    $node example.js
+    $ node example.js
     a
     1
     ab
@@ -286,7 +286,7 @@ Example:
 ```
 
 ```shell
-    $node example.js
+    $ node example.js
     A
     AB
     ABC
