@@ -28,7 +28,8 @@ A `Source` is built up with `Source.from` chained with `Source.withDownstream`:
   | Parameter  | Type    | Description |
   |------------|---------|-------------|
   | downstream | Process | The composition of processes to execute when an event is emitted |
-where `Process:: async Stream -> Stream`
+
+  where `Process:: async Stream -> Stream`
 
 Example:
 
@@ -65,7 +66,8 @@ Example:
   | Parameter | Type      | Description                     |
   |-----------|-----------|---------------------------------|
   | emitters  | [Emitter] | The event emitters to listen to |
-The returned event emitter exposes an emission callback named "onevent" which is used as the second parameter to `Source.from`.
+
+  The returned event emitter exposes an emission callback named `"onevent"` which is used as the second parameter to `Source.from`.
 
 * `makeEmitter:: (EventEmitter, String) -> Emitter`
   | Parameter    | Type         | Description                       |
@@ -99,7 +101,7 @@ Example:
     event emitted and processed`
 
 ## Make A Process
-A process is an asynchronous function that receives and outputs a _stream_. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style.
+A process is an asynchronous function that receives and outputs a _stream_. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style:
 
 * `now:: Stream -> AvailableStream`
   | Parameter | Type   | Description |
@@ -150,7 +152,8 @@ Example:
 
 ## Make A Composition Of Processes
 Complex processes are more easily defined by chaining smaller functions implementing a specific task each. One event has to pass through every step so it is not possible to await the later stream in each of these. Instead, a function records to the stream what should be executed on the next event. The chain of future processes constitutes the _continuation_.
-`commit` is used to record the next iteration of a process and should be called in the return statement. `continuation` returns the future processing sequence from the available stream (`continuation(now(stream))`). `forget` clears out the continuation.
+
+`commit` is used to record the next iteration of a process and should be called in the return statement. `continuation` returns the future processing sequence from the available stream (`continuation(now(stream))`). `forget` clears out the continuation:
 
 * `commit:: (Stream, Process) -> Stream`
   | Parameter | Type    | Description                              |
@@ -169,8 +172,10 @@ Complex processes are more easily defined by chaining smaller functions implemen
   | stream    | Stream | The stream  |
 
 Notes:
-    * Using `continuation` and `forget` together in the last step of a composed process allows to define loops (see example).
-    * A conditional loop structure in the middle of the chain of processes effectively filters out choosen events for the subsequent steps.
+
+* Using `continuation` and `forget` together in the last step of a composed process allows to define loops (see example).
+
+* A conditional loop structure in the middle of the chain of processes effectively filters out choosen events for the subsequent steps.
 
 Example:
 
@@ -222,7 +227,7 @@ Example:
     stream processed
 
 ## Transform Events
-One process can float a value downstream with `floatOn`. It is used in the return statement, possibly chained with `commit`.
+One process can float a value downstream with `floatOn`. It is used in the return statement, possibly chained with `commit`:
 
 * `floatOn:: (Stream, Any) -> Stream`
   | Parameter | Type   | Description                                           |
@@ -276,10 +281,10 @@ Example:
     ABC
     stream processed
 
-## Test The Downstream
+## Test The Process
 As observed in the examples, **streamer** provides a test event emitter `StreamerTest.emitSequence` (whose emission callback name is `"onevent"`):
 * `StreamerTest.emitSequence:: ([Any], Maybe<Number>) -> EventEmitter`
   | Parameter | Type          | Description                                                 |
   |-----------|---------------|-------------------------------------------------------------|
   | sequence  | [Any]         | An array of values to emit in sequence                      |
-  | delay     | Maybe<Number> | The time interval in ms between two events. Default: 200 ms |
+  | delay     | Maybe\<Number> | The time interval in ms between two events. Default: 200 ms |
