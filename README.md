@@ -18,17 +18,17 @@ and import the needed functionalities:
 
 ## Make A Source
 A `Source` is built up with `Source.from` chained with `Source.withDownstream`:
-* _Source.from:: (EventEmitter, String) -> Source_
+* `Source.from:: (EventEmitter, String) -> Source`
   | Parameter            | Type         | Description          |
   |----------------------|--------------|----------------------|
   | eventEmitter         | EventEmitter | A Node event emitter |
   | emissionCallbackName | String       | The name of the callback of the event to listen to, as used in the statement `eventEmitter.on('someEvent', callbackName)` |
 
-* _Source.withDownstream:: Process -> Source_
+* `Source.withDownstream:: Process -> Source`
   | Parameter  | Type    | Description |
   |------------|---------|-------------|
   | downstream | Process | The composition of processes to execute when an event is emitted |
-where _Process:: async Stream -> Stream_
+where `Process:: async Stream -> Stream`
 
 Example:
 
@@ -61,13 +61,13 @@ Example:
     event emitted and processed
 
 **streamer** also provides the wrapper `mergeEvents` that can merge several event emitters into one. These emitters have to be constructed with `makeEmitter`:
-* _mergeEvents:: [Emitter] -> EventEmitter_
+* `mergeEvents:: [Emitter] -> EventEmitter`
   | Parameter | Type      | Description                     |
   |-----------|-----------|---------------------------------|
   | emitters  | [Emitter] | The event emitters to listen to |
 The returned event emitter exposes an emission callback named "onevent" which is used as the second parameter to `Source.from`.
 
-* _makeEmitter:: (EventEmitter, String) -> Emitter_
+* `makeEmitter:: (EventEmitter, String) -> Emitter`
   | Parameter    | Type         | Description                       |
   |--------------|--------------|-----------------------------------|
   | eventEmitter | EventEmitter | The event emitter to listen to    |
@@ -99,9 +99,26 @@ Example:
     event emitted and processed`
 
 ## Make A Process
-A process is an asynchronous function that receives and outputs a _stream_. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited on with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style.
+A process is an asynchronous function that receives and outputs a _stream_. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style.
+
+* `now:: Stream -> AvailableStream`
+  | Parameter | Type   | Description |
+  |-----------|--------|-------------|
+  | stream    | Stream | The stream  |
+
+* `later:: Stream -> Promise<Stream>`
+  | Parameter | Type   | Description |
+  |-----------|--------|-------------|
+  | stream    | Stream | The stream  |
+
+* `value:: AvailableStream -> Any`
+  | Parameter | Type            | Description                                              |
+  |-----------|-----------------|----------------------------------------------------------|
+  | now       | AvailableStream | The current stream from which the event can be retrieved |
 
 Example:
+
+```javascript
    const { later, now, Source, StreamerTest, value } = require('streamer');
 
    const processA = async (stream) => {
@@ -123,20 +140,41 @@ Example:
 
    Source.from(StreamerTest.emitSequence([1, 2, 3, 4]), "onevent")
          .withDownstream(async (stream) => processB(await processA(stream)));
+```
 
-`$node example.js
-1
-2
-3
-stream processed`
+    $node example.js
+    1
+    2
+    3
+    stream processed
 
 ## Make A Composition Of Processes
-Complex processes are more easily defined by chaining smaller functions implementing a specific task each. One event has to pass through every step so it is not possible to await on the later stream in each of these. Instead, a function records to the stream what should be executed on the next event. The chain of future processes constitute the _continuation_.
-* `commit` is used to record the next iteration of a process. It takes the stream as first argument and the function to execute later as second. It returns a stream and should be called in the return statement.
-* `continuation` returns the future processing sequence from the current event passed as argument (`continuation(now(stream))`).
-* `forget` clears out the continuation from the argument _stream_ and returns the latter. Used together with `continuation` in a last step of the composed process, it allows to define loops (see example).
+Complex processes are more easily defined by chaining smaller functions implementing a specific task each. One event has to pass through every step so it is not possible to await the later stream in each of these. Instead, a function records to the stream what should be executed on the next event. The chain of future processes constitutes the _continuation_.
+`commit` is used to record the next iteration of a process and should be called in the return statement. `continuation` returns the future processing sequence from the available stream (`continuation(now(stream))`). `forget` clears out the continuation.
+
+* `commit:: (Stream, Process) -> Stream`
+  | Parameter | Type    | Description                              |
+  |-----------|---------|------------------------------------------|
+  | stream    | Stream  | The stream                               |
+  | process   | Process | The process to execute on the next event |
+
+* `continuation:: AvailableStream -> Process`
+  | Parameter | Type            | Description          |
+  |-----------|-----------------|----------------------|
+  | now       | AvailableStream | The available stream |
+
+* `forget:: Stream -> Stream`
+  | Parameter | Type   | Description |
+  |-----------|--------|-------------|
+  | stream    | Stream | The stream  |
+
+Notes:
+    * Using `continuation` and `forget` together in the last step of a composed process allows to define loops (see example).
+    * A conditional loop structure in the middle of the chain of processes effectively filters out choosen events for the subsequent steps.
 
 Example:
+
+```javascript
     const { commit, continuation, forget, later, now, Source, StreamerTest, value } = require('streamer');
 
     const parseLetters = parsed => async (stream) => {
@@ -174,20 +212,27 @@ Example:
 
     Source.from(StreamerTest.emitSequence(["a", 1, "b", 2, "end"]), "onevent")
           .withDownstream(async (stream) => loop(await sumNumbers(0)(await parseLetters("")(stream))));
+```
 
-`$node example.js
-a
-1
-ab
-3
-stream processed`
-
-Note that a conditional loop structure in the middle of the chain of processes effectively filters out choosen events for the subsequent steps.
+    $node example.js
+    a
+    1
+    ab
+    3
+    stream processed
 
 ## Transform Events
-One process can push a value downstream. It is done with 'floatOn' which takes the stream as first argument and the value to output as second. It returns a _stream_ and should be used in the return statement, possibly chained with `commit`.
+One process can float a value downstream with `floatOn`. It is used in the return statement, possibly chained with `commit`.
+
+* `floatOn:: (Stream, Any) -> Stream`
+  | Parameter | Type   | Description                                           |
+  |-----------|--------|-------------------------------------------------------|
+  | stream    | Stream | The stream                                            |
+  | jsValue   | Any    | The value to pass on to the next steps of the process |
 
 Example:
+
+```javascript
     const { commit, continuation, floatOn, forget, later, now, Source, StreamerTest, value } = require('streamer');
 
     const upperCase = async (stream) => {
@@ -223,12 +268,18 @@ Example:
 
     Source.from(StreamerTest.emitSequence(["a", "b", "c", "end"]), "onevent")
           .withDownstream(async (stream) => loop(await parse("")(await upperCase(stream))));
+```
 
-`$node example.js
-A
-AB
-ABC
-stream processed`
+    $node example.js
+    A
+    AB
+    ABC
+    stream processed
 
 ## Test The Downstream
-As observed in the examples, **streamer** provides a test event emitter `StreamerTest.emitSequence` with the emission callback name being "onevent". It emits the sequence of values passed in the argument array.
+As observed in the examples, **streamer** provides a test event emitter `StreamerTest.emitSequence` (whose emission callback name is `"onevent"`):
+* `StreamerTest.emitSequence:: ([Any], Maybe<Number>) -> EventEmitter`
+  | Parameter | Type          | Description                                                 |
+  |-----------|---------------|-------------------------------------------------------------|
+  | sequence  | [Any]         | An array of values to emit in sequence                      |
+  | delay     | Maybe<Number> | The time interval in ms between two events. Default: 200 ms |
