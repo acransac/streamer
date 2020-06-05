@@ -8,7 +8,9 @@ To make composition easier, each process can record a variation of itself to exe
 # How To Use Streamer
 **streamer** is a small helper library. Add it to a project with:
 
+```shell
     npm install acransac/streamer
+```
 
 and import the needed functionalities:
 
@@ -58,8 +60,10 @@ Example:
     emitter.emit('event');
 ```
 
+```shell
     $node example.js
     event emitted and processed
+```
 
 **streamer** also provides the wrapper `mergeEvents` that can merge several event emitters into one. These emitters have to be constructed with `makeEmitter`:
 * `mergeEvents:: [Emitter] -> EventEmitter`
@@ -97,8 +101,10 @@ Example:
     emitter1.emit('someEvent'); // or emitter2.emit('anotherEvent');
 ```
 
+```shell
     $node example.js
     event emitted and processed`
+```
 
 ## Make A Process
 A process is an asynchronous function that receives and outputs a stream. It can be a composition of smaller such functions. From within a process, the value attached to the available event is retrieved with `value(now(stream))`. Events that are not yet produced can be awaited with `await later(stream)`. Because the stream is defined in terms of itself, the processes lend themselves to a recursive style:
@@ -144,11 +150,13 @@ Example:
          .withDownstream(async (stream) => processB(await processA(stream)));
 ```
 
+```shell
     $node example.js
     1
     2
     3
     stream processed
+```
 
 ## Make A Composition Of Processes
 Complex processes are more easily defined by chaining smaller functions implementing a specific task each. One event has to pass through every step so it is not possible to await the later stream in each of these. Instead, a function records to the stream what should be executed on the next event. The chain of future processes constitutes the _continuation_.
@@ -219,12 +227,14 @@ Example:
           .withDownstream(async (stream) => loop(await sumNumbers(0)(await parseLetters("")(stream))));
 ```
 
+```shell
     $node example.js
     a
     1
     ab
     3
     stream processed
+```
 
 ## Transform Events
 One process can float a value downstream with `floatOn`. It is used in the return statement, possibly chained with `commit`:
@@ -275,11 +285,13 @@ Example:
           .withDownstream(async (stream) => loop(await parse("")(await upperCase(stream))));
 ```
 
+```shell
     $node example.js
     A
     AB
     ABC
     stream processed
+```
 
 ## Test The Process
 As observed in the examples, **streamer** provides a test event emitter `StreamerTest.emitSequence` (whose emission callback name is `"onevent"`):
