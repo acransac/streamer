@@ -1,3 +1,6 @@
+// Copyright (c) Adrien Cransac
+// License: MIT
+
 const { commit, continuation, floatOn, forget, later, makeEmitter, mergeEvents, now, Source, value } = require('./streamer.js');
 const Test = require('tester');
 const StreamerTest = require('./testutils.js');

@@ -1,3 +1,6 @@
+// Copyright (c) Adrien Cransac
+// License: MIT
+
 const EventEmitter = require('events');
 
 class SequenceEmitter extends EventEmitter {
