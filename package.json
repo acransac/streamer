@@ -1,13 +1,21 @@
 {
-  "name": "streamer",
-  "version": "0.0.1",
-  "description": "A wrapper around event emitters or promises to expose events as a recursively defined stream with a current known value and a later stream",
+  "name": "@acransac/streamer",
+  "version": "1.0.0",
+  "description": "A model to process events with Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test_streamer.js"
   },
   "author": "Adrien Cransac",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acransac/streamer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/acransac/streamer/issues"
+  },
+  "homepage": "https://github.com/acransac/streamer",
   "dependencies": {
     "tester": "file:../tester"
   }
