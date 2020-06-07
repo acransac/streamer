@@ -9,13 +9,13 @@ To make composition easier, each process can record a variation of itself to exe
 **streamer** is a small helper library. Add it to a project with:
 
 ```shell
-    $ npm install acransac/streamer
+    $ npm install @acransac/streamer
 ```
 
 and import the needed functionalities:
 
 ```javascript
-    const { commit, continuation, floatOn, forget, later, makeEmitter, mergeEvents, now, Source, StreamerTest, value } = require('streamer');
+    const { commit, continuation, floatOn, forget, later, makeEmitter, mergeEvents, now, Source, StreamerTest, value } = require('@acransac/streamer');
 ```
 
 ## Make A Source
@@ -37,7 +37,7 @@ Example:
 
 ```javascript
     const EventEmitter = require('events');
-    const { Source } = require('streamer');
+    const { Source } = require('@acransac/streamer');
 
     class Emitter extends EventEmitter {
       constructor() {
@@ -85,7 +85,7 @@ Example:
 
 ```javascript
     const EventEmitter = require('events');
-    const { makeEmitter, mergeEvents, Source } = require('streamer');
+    const { makeEmitter, mergeEvents, Source } = require('@acransac/streamer');
 
     const emitter1 = new EventEmitter();
 
@@ -127,7 +127,7 @@ A process is an asynchronous function that receives and outputs a stream. It can
 Example:
 
 ```javascript
-   const { later, now, Source, StreamerTest, value } = require('streamer');
+   const { later, now, Source, StreamerTest, value } = require('@acransac/streamer');
 
    const processA = async (stream) => {
      if (value(now(stream)) > 3) {
@@ -188,7 +188,7 @@ Notes:
 Example:
 
 ```javascript
-    const { commit, continuation, forget, later, now, Source, StreamerTest, value } = require('streamer');
+    const { commit, continuation, forget, later, now, Source, StreamerTest, value } = require('@acransac/streamer');
 
     const parseLetters = parsed => async (stream) => {
       if (typeof value(now(stream)) === "string" && value(now(stream)) !== "end") {
@@ -248,7 +248,7 @@ One process can float a value downstream with `floatOn`. It is used in the retur
 Example:
 
 ```javascript
-    const { commit, continuation, floatOn, forget, later, now, Source, StreamerTest, value } = require('streamer');
+    const { commit, continuation, floatOn, forget, later, now, Source, StreamerTest, value } = require('@acransac/streamer');
 
     const upperCase = async (stream) => {
       if (value(now(stream)) !== "end") {
@@ -296,7 +296,7 @@ Example:
 ## Test The Process
 As observed in the examples, **streamer** provides a test event emitter `StreamerTest.emitSequence` (whose emission callback name is `"onevent"`):
 * `StreamerTest.emitSequence:: ([Any], Maybe<Number>) -> EventEmitter`
-  | Parameter | Type          | Description                                                 |
-  |-----------|---------------|-------------------------------------------------------------|
-  | sequence  | [Any]         | An array of values to emit in sequence                      |
+  | Parameter | Type           | Description                                                 |
+  |-----------|----------------|-------------------------------------------------------------|
+  | sequence  | [Any]          | An array of values to emit in sequence                      |
   | delay     | Maybe\<Number> | The time interval in ms between two events. Default: 200 ms |
