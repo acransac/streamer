@@ -16,7 +16,7 @@ function test_eventsStream(finish, check) {
   }
 
   Source.from(StreamerTest.emitSequence(["a", "b", "c", "end"]), "onevent").withDownstream(async (stream) => {
-    return finish(check(Test.sameSequences(await simpleFlow(stream), ["a", "b", "c"])));
+    return finish(check(sameSequences(await simpleFlow(stream), ["a", "b", "c"])));
   });
 }
 
@@ -71,8 +71,24 @@ function test_mergeEvents(finish, check) {
   Source.from(mergeEvents([makeEmitter(StreamerTest.emitSequence(["a", "b", "c", "end"], 200), "event"),
                            makeEmitter(StreamerTest.emitSequence(["x", "y", "z", "end"], 210), "event")]), "onevent")
         .withDownstream(async (stream) => {
-    return finish(check(Test.sameSequences(await simpleFlow(stream), ["a", "x", "b", "y", "c", "z"])));
+    return finish(check(sameSequences(await simpleFlow(stream), ["a", "x", "b", "y", "c", "z"])));
   });
+}
+
+function sameSequences(sequenceA, sequenceB) {
+  const equalSequences = (sequenceA, sequenceB) => {
+    if (sequenceA.length === 0) {
+      return true;
+    }
+    else if (sequenceA[0] !== sequenceB[0]) {
+      return false;
+    }
+    else {
+      return equalSequences(sequenceA.slice(1), sequenceB.slice(1));
+    }
+  };
+
+  return sequenceA.length === sequenceB.length && equalSequences(sequenceA, sequenceB);
 }
 
 Test.run([
