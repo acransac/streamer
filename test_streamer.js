@@ -2,7 +2,7 @@
 // License: MIT
 
 const { commit, continuation, floatOn, forget, later, makeEmitter, mergeEvents, now, Source, value } = require('./streamer.js');
-const Test = require('tester');
+const Test = require('@acransac/tester');
 const StreamerTest = require('./testutils.js');
 
 function test_eventsStream(finish, check) {
