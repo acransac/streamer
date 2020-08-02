@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/acransac/streamer",
   "dependencies": {
-    "@acransac/tester": "file:../tester"
+    "@acransac/tester": "^1.0.0"
   }
 }
